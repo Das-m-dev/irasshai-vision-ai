@@ -1,44 +1,54 @@
-import React, { useEffect } from 'react';
-import { useRive, useStateMachineInput } from '@rive-app/react-canvas';
+import React, { useEffect, useRef } from 'react';
+import { useRive } from '@rive-app/react-canvas';
 
-// Rename to match the State Machine name inside your .riv file - open the
-// file in the Rive web editor (or ask whoever exported it) to confirm.
 const STATE_MACHINE_NAME = 'State Machine 1';
 
 /**
- * Same contract as the old SVG Character: state / gazeX / gazeY in, nothing
- * else. Swap the .riv file and STATE_MACHINE_NAME below when you upgrade
- * from a free community character to a custom-commissioned one - this
- * component and App.jsx don't need to change.
+ * This particular character file (Rive community "Cursor tracking bear")
+ * has no State Machine Number inputs - its tracking is built with a
+ * Listener bound directly to real pointer position on the canvas, not
+ * inputs you can set from code. So instead of useStateMachineInput, we
+ * synthesize pointermove events over the canvas at the position we want
+ * the bear to look, using the same gazeX/gazeY (-1..1) values as before.
  *
- * Expected inputs on the State Machine (rename below to match your file):
- *   - lookX, lookY   : Number inputs, roughly -1..1, drive head/eye direction
- *   - greet          : Trigger, fired once when a visitor is first detected
+ * If you later swap to a character file that DOES expose lookX/lookY
+ * Number inputs, switch back to useStateMachineInput - that approach is
+ * cleaner and doesn't depend on DOM event simulation.
  */
 export default function RiveCharacter({ state, gazeX, gazeY }) {
+  const containerRef = useRef(null);
+
   const { rive, RiveComponent } = useRive({
-    src: '/character.riv', // place your downloaded/exported .riv file in /public
+    src: '/character.riv',
     stateMachines: STATE_MACHINE_NAME,
     autoplay: true
   });
 
-  const lookX = useStateMachineInput(rive, STATE_MACHINE_NAME, 'lookX');
-  const lookY = useStateMachineInput(rive, STATE_MACHINE_NAME, 'lookY');
-  const greetTrigger = useStateMachineInput(rive, STATE_MACHINE_NAME, 'greet');
-
   useEffect(() => {
-    if (lookX) lookX.value = gazeX;
-    if (lookY) lookY.value = gazeY;
-  }, [gazeX, gazeY, lookX, lookY]);
+    if (!rive) return;
+    const canvas = containerRef.current?.querySelector('canvas');
+    if (!canvas) return;
 
-  useEffect(() => {
-    if (state === 'greet' && greetTrigger) {
-      greetTrigger.fire();
-    }
-  }, [state, greetTrigger]);
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
+    // gazeX/gazeY are -1..1 (0,0 = center). Map to real screen pixel
+    // coordinates over the canvas, since the file's Listener reacts to
+    // actual cursor position, not artboard-space values.
+    const clientX = rect.left + ((gazeX + 1) / 2) * rect.width;
+    const clientY = rect.top + ((gazeY + 1) / 2) * rect.height;
+
+    const evt = new PointerEvent('pointermove', {
+      clientX,
+      clientY,
+      bubbles: true,
+      cancelable: true
+    });
+    canvas.dispatchEvent(evt);
+  }, [rive, gazeX, gazeY]);
 
   return (
-    <div className="character-stage">
+    <div className="character-stage" ref={containerRef}>
       <RiveComponent style={{ width: 420, height: 560 }} />
       {state === 'greet' && (
         <div className="speech-bubble">いらっしゃいませ！</div>

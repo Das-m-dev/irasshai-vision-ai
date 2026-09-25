@@ -49,29 +49,30 @@ npm run dist
 - `minDetectionConfidence` in `useFaceTracking.js`
 
 ## Character art (Rive)
-The app now uses `src/components/RiveCharacter.jsx`, which loads a `.riv`
-file and drives it live from the tracking state machine. To use it:
+Currently using the free "Cursor tracking bear" community file (by gilbishk,
+CC BY) at `public/character.riv`. This file has no State Machine Number
+inputs - its cursor tracking is built with a Listener bound to real pointer
+position on the canvas, not values you can set from code. So
+`RiveCharacter.jsx` drives it by dispatching synthetic `pointermove` events
+over the canvas at the position corresponding to `gazeX`/`gazeY`, rather
+than using `useStateMachineInput`. This file also has no greet/wave state
+(just "Normal face") - the bow/greeting is currently handled entirely by
+the CSS speech bubble, not a Rive animation.
 
-1. Get a `.riv` character file:
-   - Free: browse rive.app/community (filter "Characters") for a rigged
-     animal - the penguin "Arctic Motion Loop" file is a good starting point
-     (bone-rigged, blinking, scarf wave).
-   - Paid: rive.app/marketplace has production-ready mascots (~$20-100).
-   - Custom: commission an animal mascot built specifically in Rive with an
-     idle/greet/look state machine (search Contra/Upwork for "Rive mascot
-     animation").
-2. Open the file in the Rive web editor and note the **State Machine name**
-   and its **input names** (should have something like `lookX`, `lookY`
-   number inputs and a `greet` trigger - if the file uses different names,
-   update `STATE_MACHINE_NAME` and the input names in
-   `RiveCharacter.jsx` to match).
-3. Drop the file at `public/character.riv`.
-4. `npm run electron:dev` and it should load automatically.
-
-If a community/marketplace file doesn't already have look-direction inputs
-wired up, you (or whoever you commission) will need to add a 2D blend state
-in the Rive editor mapping `lookX`/`lookY` to head and eye bone rotation -
-most character riggers can do this in under an hour once the base rig exists.
+To use a different character:
+1. Get a `.riv` file (rive.app/community, free) and drop it at
+   `public/character.riv`.
+2. Open it in the Rive editor and check the **Data** panel for Number
+   inputs (`lookX`/`lookY` or similar).
+   - If it HAS Number inputs: switch `RiveCharacter.jsx` back to
+     `useStateMachineInput` (cleaner, no DOM event faking needed) - see
+     git history for the earlier version of this file.
+   - If it does NOT (built with pointer Listeners instead, like the bear):
+     keep the synthetic pointermove approach, just double check the
+     `STATE_MACHINE_NAME` constant matches the file's actual state machine
+     name.
+3. If the file has a greet/wave state or trigger, wire it up similarly to
+   how `greetTrigger` was used in the Number-input version.
 
 ### Alternative: Live2D
 Use the Cubism Web SDK with a free sample model (e.g. Hiyori, from
