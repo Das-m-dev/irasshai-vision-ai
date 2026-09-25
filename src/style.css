@@ -1,0 +1,83 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0f1117;
+  overflow: hidden;
+}
+
+.app-root {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+}
+
+.status {
+  position: absolute;
+  top: 20px;
+  color: #cfd3dc;
+  font-size: 14px;
+}
+
+.status.error {
+  color: #ff6b6b;
+}
+
+.character-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.character {
+  transform-origin: 150px 340px; /* base of the body, so bow pivots at the waist */
+}
+
+.character.bowing {
+  animation: bow 1.8s ease-in-out;
+}
+
+@keyframes bow {
+  0% { transform: rotate(0deg); }
+  30% { transform: rotate(18deg); }
+  55% { transform: rotate(18deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.speech-bubble {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  color: #222;
+  padding: 10px 18px;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  animation: pop-in 0.3s ease-out;
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.9); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+.debug {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  color: #6a7185;
+  font-size: 12px;
+  font-family: monospace;
+}
