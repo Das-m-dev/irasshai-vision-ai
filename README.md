@@ -49,30 +49,63 @@ npm run dist
 - `minDetectionConfidence` in `useFaceTracking.js`
 
 ## Character art (Rive)
-Currently using the free "Cursor tracking bear" community file (by gilbishk,
-CC BY) at `public/character.riv`. This file has no State Machine Number
-inputs - its cursor tracking is built with a Listener bound to real pointer
-position on the canvas, not values you can set from code. So
-`RiveCharacter.jsx` drives it by dispatching synthetic `pointermove` events
-over the canvas at the position corresponding to `gazeX`/`gazeY`, rather
-than using `useStateMachineInput`. This file also has no greet/wave state
-(just "Normal face") - the bow/greeting is currently handled entirely by
-the CSS speech bubble, not a Rive animation.
+Using the free "Cat Follow Cursor Demo" file by TeamRive (Rive's own
+official runtime demo account) - rive.app/marketplace/24639-46040-cat-follow-cursor-demo.
+Download it, rename to `character.riv`, and put it in `public/`.
 
-To use a different character:
-1. Get a `.riv` file (rive.app/community, free) and drop it at
-   `public/character.riv`.
-2. Open it in the Rive editor and check the **Data** panel for Number
-   inputs (`lookX`/`lookY` or similar).
-   - If it HAS Number inputs: switch `RiveCharacter.jsx` back to
-     `useStateMachineInput` (cleaner, no DOM event faking needed) - see
-     git history for the earlier version of this file.
-   - If it does NOT (built with pointer Listeners instead, like the bear):
-     keep the synthetic pointermove approach, just double check the
-     `STATE_MACHINE_NAME` constant matches the file's actual state machine
-     name.
-3. If the file has a greet/wave state or trigger, wire it up similarly to
-   how `greetTrigger` was used in the Number-input version.
+Unlike the two files tried earlier, this one uses Rive's **Data Binding /
+ViewModel** system rather than classic State Machine Number inputs - that's
+why nothing showed up in the "Data" panel for those files (Data Binding
+properties are a separate, newer mechanism, not listed there). With
+`autoBind: true`, Rive exposes a `ViewModelInstance` on the loaded `rive`
+object, and `RiveCharacter.jsx` reads/writes its `xPos`/`yPos` number
+properties directly - no synthetic pointer events, no fighting
+`isTrusted`. This is also the more robust long-term approach: it's Rive's
+documented, sanctioned API for exactly this cursor/gaze-tracking use case.
+
+Key details baked into `RiveCharacter.jsx`:
+- Artboard name: `Artboard 2` (this file has more than one artboard -
+  using the wrong one loads a blank/wrong graphic)
+- State machine name: `State Machine 1`
+- Property names: `xPos`, `yPos`, expected in a **0-100** range (not -1..1)
+  - `gazeX`/`gazeY` from the tracking pipeline are -1..1, so they're
+    remapped to 0-100 before being written
+
+If you swap in a different Data-Binding-based character later, update
+`ARTBOARD_NAME`, `STATE_MACHINE_NAME`, and the property names/range at the
+top of `RiveCharacter.jsx` to match. This file also has no greet/wave
+state - the bow/greeting is currently a pure CSS "pop" effect
+(`.greeting` class in `styles.css`) applied to the whole character
+container when `state === 'greet'`.
+
+## Adding a real wave animation
+The cat-follow-cursor demo file doesn't ship with a wave/gesture animation
+- it's a minimal tracking demo. To add one (requires your own editable
+copy - Remix the file in the Rive editor first, since the raw download
+isn't editable in place):
+
+1. In the Rive editor, go to the **Animate** tab and create a new short
+   Timeline animation (a couple seconds) where you keyframe the cat's paw
+   lifting into a wave and back down. If the rig doesn't have separate arm
+   bones, you may need to add a simple bone to one paw first (Rigging
+   basics: select the paw shape → Bones tool → draw a bone → bind the
+   paw's vertices to it via the Weight tool).
+2. Open the **State Machine** graph, add a new state that plays this
+   wave animation, and connect it from your idle/tracking state via a
+   transition.
+3. That transition needs something to trigger it. Since this file uses
+   Data Binding, add a **Trigger** property to the ViewModel (Data panel →
+   Add Property → Trigger, name it e.g. `wave`) and set the state
+   transition's condition to fire on that trigger.
+4. In `RiveCharacter.jsx`, set `WAVE_TRIGGER_NAME = 'wave'` (matching
+   whatever name you gave it) - the code already looks up and fires that
+   trigger automatically on the idle→greet transition, no further changes
+   needed.
+
+This is a real rigging task (expect an hour or two the first time,
+faster once you're comfortable with Rive's bone/weight tools) - YouTube
+has several "Rive character rigging basics" tutorials that cover exactly
+this paw/arm-bone workflow.
 
 ### Alternative: Live2D
 Use the Cubism Web SDK with a free sample model (e.g. Hiyori, from
@@ -81,6 +114,21 @@ live2d.com/en/download/sample-data), map `gazeX`/`gazeY` to the model's
 motion on `state === 'greet'`. More anime-styled than Rive out of the box,
 but a heavier SDK to integrate.
 
+## Running fullscreen
+The Electron window now launches fullscreen by default (`fullscreen: true`
+in `electron/main.js`). While developing:
+- **F11** toggles fullscreen on/off
+- **Escape** exits fullscreen if you're stuck in it
+
+For an actual reception-desk deployment, also flip `kiosk: true` in
+`electron/main.js` - this additionally hides the taskbar and blocks
+Alt+Tab/Alt+F4 so nobody can accidentally click out of it. Leave it `false`
+during development, since kiosk mode makes it harder to get to DevTools.
+
+The character's size on screen is controlled by `.character-canvas` in
+`styles.css` (currently `min(90vw, 70vh)`, capped at 900px) - adjust those
+values to match how large you want the character to appear on the real
+monitor once you've got it hooked up.
 ## Privacy note
 No video frames or images are ever saved to disk - detection runs entirely
 in memory on each frame. If you deploy this at a real entrance, put up

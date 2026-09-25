@@ -9,14 +9,28 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
-    // Set to true fullscreen / kiosk once you're ready to deploy to the reception monitor
-    fullscreen: false,
+    fullscreen: true,
+    // Kiosk mode goes further than fullscreen - hides taskbar, blocks
+    // Alt+Tab/Alt+F4 etc. Turn this on once you're deploying to the actual
+    // reception monitor; leave it off during development so you can still
+    // get to DevTools and other windows easily.
     kiosk: false,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
+    }
+  });
+
+  // F11 toggles fullscreen, Escape exits it - handy while developing so
+  // you're not stuck fullscreen with no easy way out.
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.type === 'keyDown' && input.key === 'F11') {
+      win.setFullScreen(!win.isFullScreen());
+    }
+    if (input.type === 'keyDown' && input.key === 'Escape' && win.isFullScreen()) {
+      win.setFullScreen(false);
     }
   });
 
@@ -31,7 +45,7 @@ function createWindow() {
   });
 
   if (isDev) {
-    win.loadURL('http://localhost:5174');
+    win.loadURL('http://localhost:5173');
     win.webContents.openDevTools({ mode: 'detach' });
   } else {
     win.loadFile(path.join(__dirname, '../dist/index.html'));
