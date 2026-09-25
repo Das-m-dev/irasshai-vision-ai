@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useFaceTracking } from './hooks/useFaceTracking.js';
-import { useSmoothedPosition } from './hooks/useSmoothedPosition.js';
+import { useSmoothedPosition } from './hooks/useSmootherdPosition.js';
 import Character from './components/Character.jsx';
 
 // How long nobody has to be absent before we drop back to idle.
