@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useFaceTracking } from './hooks/useFaceTracking.js';
-import { useSmoothedPosition } from './hooks/useSmootherdPosition.js';
-import Character from './components/Character.jsx';
+import { useSmoothedPosition } from './hooks/useSmoothedPosition.js';
+import Character from './components/RiveCharacter.jsx';
 
 // How long nobody has to be absent before we drop back to idle.
 // Prevents flicker if someone briefly turns their head / steps just out of frame.
@@ -34,6 +34,7 @@ export default function App() {
         setState('idle');
       }, FAREWELL_COOLDOWN_MS);
     } else if (detected && state === 'idle') {
+      // Edge case: detection came back up before the idle transition fired.
       setState('tracking');
     }
 

@@ -48,16 +48,37 @@ npm run dist
 - Smoothing `alpha` in `useSmoothedPosition` (lower = smoother but laggier)
 - `minDetectionConfidence` in `useFaceTracking.js`
 
-## Upgrading the character
-`Character.jsx` is intentionally a dumb component with a 3-prop contract
-(`state`, `gazeX`, `gazeY`). To swap in real character art without touching
-the tracking/state-machine logic:
-- **Rive**: install `@rive-app/react-canvas`, load a `.riv` file with a State
-  Machine, and drive its `lookX`/`lookY`/`greet` inputs from the same props.
-- **Live2D**: use the Cubism Web SDK with a free sample model (e.g. Hiyori,
-  from live2d.com/en/download/sample-data), map `gazeX`/`gazeY` to the
-  model's `ParamAngleX`/`ParamAngleY`/`ParamEyeBallX` parameters, and trigger
-  the bow motion on `state === 'greet'`.
+## Character art (Rive)
+The app now uses `src/components/RiveCharacter.jsx`, which loads a `.riv`
+file and drives it live from the tracking state machine. To use it:
+
+1. Get a `.riv` character file:
+   - Free: browse rive.app/community (filter "Characters") for a rigged
+     animal - the penguin "Arctic Motion Loop" file is a good starting point
+     (bone-rigged, blinking, scarf wave).
+   - Paid: rive.app/marketplace has production-ready mascots (~$20-100).
+   - Custom: commission an animal mascot built specifically in Rive with an
+     idle/greet/look state machine (search Contra/Upwork for "Rive mascot
+     animation").
+2. Open the file in the Rive web editor and note the **State Machine name**
+   and its **input names** (should have something like `lookX`, `lookY`
+   number inputs and a `greet` trigger - if the file uses different names,
+   update `STATE_MACHINE_NAME` and the input names in
+   `RiveCharacter.jsx` to match).
+3. Drop the file at `public/character.riv`.
+4. `npm run electron:dev` and it should load automatically.
+
+If a community/marketplace file doesn't already have look-direction inputs
+wired up, you (or whoever you commission) will need to add a 2D blend state
+in the Rive editor mapping `lookX`/`lookY` to head and eye bone rotation -
+most character riggers can do this in under an hour once the base rig exists.
+
+### Alternative: Live2D
+Use the Cubism Web SDK with a free sample model (e.g. Hiyori, from
+live2d.com/en/download/sample-data), map `gazeX`/`gazeY` to the model's
+`ParamAngleX`/`ParamAngleY`/`ParamEyeBallX` parameters, and trigger the bow
+motion on `state === 'greet'`. More anime-styled than Rive out of the box,
+but a heavier SDK to integrate.
 
 ## Privacy note
 No video frames or images are ever saved to disk - detection runs entirely
@@ -83,4 +104,3 @@ If you have the GitHub CLI installed, you can create + push in one go:
 ```bash
 gh repo create reception-character --private --source=. --remote=origin --push
 ```
-
