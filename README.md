@@ -120,34 +120,7 @@ in `electron/main.js`). While developing:
 - **F11** toggles fullscreen on/off
 - **Escape** exits fullscreen if you're stuck in it
 
-For an actual reception-desk deployment, also flip `kiosk: true` in
-`electron/main.js` - this additionally hides the taskbar and blocks
-Alt+Tab/Alt+F4 so nobody can accidentally click out of it. Leave it `false`
-during development, since kiosk mode makes it harder to get to DevTools.
 
-The character's size on screen is controlled by `.character-canvas` in
-`styles.css` (currently `min(90vw, 70vh)`, capped at 900px) - adjust those
-values to match how large you want the character to appear on the real
-monitor once you've got it hooked up.
-## Privacy note
-No video frames or images are ever saved to disk - detection runs entirely
-in memory on each frame. If you deploy this at a real entrance, put up
-signage noting a camera is in use for presence detection, per Japan's
-personal information protection requirements.
-
-## Getting this into git
-
-```bash
-git init
-git add .
-git commit -m "Initial scaffold: camera presence detection + animated character"
-
-# create an empty repo on GitHub first (via the web UI or `gh repo create`),
-# then:
-git branch -M main
-git remote add origin <your-repo-url>
-git push -u origin main
-```
 
 If you have the GitHub CLI installed, you can create + push in one go:
 ```bash
