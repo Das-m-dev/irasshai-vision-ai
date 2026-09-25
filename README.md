@@ -119,10 +119,3 @@ The Electron window now launches fullscreen by default (`fullscreen: true`
 in `electron/main.js`). While developing:
 - **F11** toggles fullscreen on/off
 - **Escape** exits fullscreen if you're stuck in it
-
-
-
-If you have the GitHub CLI installed, you can create + push in one go:
-```bash
-gh repo create reception-character --private --source=. --remote=origin --push
-```
